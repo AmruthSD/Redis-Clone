@@ -1,8 +1,16 @@
-build:
-	go build -o redis ./cmd/Redis
+OBJFILE := $(TEST:.go=)
 
-run:
-	./redis
+build_main:
+	go build -o ./bin/redis ./cmd/Redis
+
+build_test:
+	go build -o ./bin/$(OBJFILE) ./tests/$(TEST)
+
+run_main:
+	./bin/redis
+
+run_test:
+	./bin/$(OBJFILE)
 
 clean:
 	rm -f redis

@@ -1,7 +1,24 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"net"
+	"os"
+)
 
 func main() {
-	fmt.Printf("Hello World\n")
+	l, err := net.Listen("tcp", "0.0.0.0:6379")
+	if err != nil {
+		fmt.Println("Failed to bind to port 6379")
+		os.Exit(1)
+	}
+	defer l.Close()
+
+	con, err := l.Accept()
+	if err != nil {
+		fmt.Println("Error accepting connection: ", err.Error())
+		os.Exit(1)
+	}
+	con.Write([]byte("+PONG\r\n"))
+	defer con.Close()
 }
