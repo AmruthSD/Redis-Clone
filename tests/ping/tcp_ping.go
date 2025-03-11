@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -17,7 +18,11 @@ func main() {
 	defer conn.Close()
 	fmt.Println("Connected to", serverAddr)
 
-	for i := 0; i < 5; i++ {
+	num, err := strconv.Atoi(os.Args[1])
+	if err != nil {
+		num = 1
+	}
+	for range num {
 		msg := "PING\r\n"
 		_, err := conn.Write([]byte(msg))
 		if err != nil {

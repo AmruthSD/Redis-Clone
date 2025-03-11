@@ -1,4 +1,4 @@
-OBJFILE := $(TEST:.go=)
+OBJFILE := $(notdir $(TEST:.go=))
 
 build_main:
 	go build -o ./bin/redis ./cmd/Redis

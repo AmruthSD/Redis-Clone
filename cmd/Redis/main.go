@@ -4,31 +4,9 @@ import (
 	"fmt"
 	"net"
 	"os"
+
+	"github.com/AmruthSD/Redis-Clone/internal/connection"
 )
-
-func handleConnection(con net.Conn) {
-	defer con.Close()
-
-	buf := make([]byte, 1024)
-
-	for {
-		bytesRead, err := con.Read(buf)
-		if err != nil {
-			if err.Error() != "EOF" {
-				fmt.Println("Error reading from connection:", err)
-			} else if err.Error() == "EOF" {
-				fmt.Println("Connection Closed")
-			}
-			return
-		}
-
-		message := string(buf[:bytesRead])
-		fmt.Println("Message received:", message)
-		if message == "PING\r\n" {
-			con.Write([]byte("+PONG\r\n"))
-		}
-	}
-}
 
 func main() {
 	l, err := net.Listen("tcp", "0.0.0.0:6379")
@@ -44,6 +22,6 @@ func main() {
 			fmt.Println("Error accepting connection: ", err.Error())
 			os.Exit(1)
 		}
-		go handleConnection(con)
+		go connection.HandleConnection(con)
 	}
 }
