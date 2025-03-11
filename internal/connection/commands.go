@@ -2,7 +2,9 @@ package connection
 
 import (
 	"net"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/AmruthSD/Redis-Clone/internal/storage"
 )
@@ -20,11 +22,17 @@ func handle_echo(parts []string, conn net.Conn) {
 }
 
 func handle_set(parts []string, conn net.Conn) {
-	if len(parts) != 3 {
+
+	if len(parts) == 3 {
+		storage.SetValue(parts[1], parts[2], -1)
+	} else if len(parts) == 5 && parts[3] == "PX" {
+		ext, _ := strconv.ParseInt(parts[4], 10, 64)
+		ti := time.Now().UnixMilli() + ext
+		storage.SetValue(parts[1], parts[2], ti)
+	} else if len(parts) != 3 {
 		conn.Write([]byte("Argument Count Not Right"))
 		return
 	}
-	storage.SetValue(parts[1], parts[2])
 	conn.Write([]byte("Done"))
 }
 
