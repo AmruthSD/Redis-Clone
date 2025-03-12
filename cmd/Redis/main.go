@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/AmruthSD/Redis-Clone/internal/config"
 	"github.com/AmruthSD/Redis-Clone/internal/connection"
 )
 
@@ -14,7 +15,11 @@ func main() {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
+
 	defer l.Close()
+
+	config.LoadConfig()
+	// storage.ReadFile(config.RedisConfig.Dir + "/" + config.RedisConfig.DbFileName)
 
 	for {
 		con, err := l.Accept()

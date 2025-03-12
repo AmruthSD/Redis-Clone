@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AmruthSD/Redis-Clone/internal/config"
 	"github.com/AmruthSD/Redis-Clone/internal/storage"
 )
 
@@ -43,4 +44,30 @@ func handle_get(parts []string, conn net.Conn) {
 	}
 	val := storage.GetValue(parts[1])
 	conn.Write([]byte(val))
+}
+
+func handle_config(parts []string, conn net.Conn) {
+	if len(parts) != 3 {
+		conn.Write([]byte("Argument Count Not Right"))
+		return
+	} else if parts[1] == "GET" && parts[2] == "dir" {
+		conn.Write([]byte(config.RedisConfig.Dir))
+	} else if parts[1] == "GET" && parts[2] == "dbfilename" {
+		conn.Write([]byte(config.RedisConfig.DbFileName))
+	} else {
+		conn.Write([]byte("Invalid Arguments"))
+	}
+}
+
+func handle_keys(parts []string, conn net.Conn) {
+	if len(parts) == 2 {
+		s := storage.HasPrefix(parts[1])
+		if len(s) == 0 {
+			s = "NO KEYS FOUND"
+		}
+		conn.Write([]byte(s))
+	} else {
+		conn.Write([]byte("Argument Count Not Right"))
+	}
+
 }

@@ -6,10 +6,12 @@ import (
 )
 
 var parse_func = map[string]func([]string, net.Conn){
-	"PING": handle_ping,
-	"ECHO": handle_echo,
-	"SET":  handle_set,
-	"GET":  handle_get,
+	"PING":   handle_ping,
+	"ECHO":   handle_echo,
+	"SET":    handle_set,
+	"GET":    handle_get,
+	"CONFIG": handle_config,
+	"KEYS":   handle_keys,
 }
 
 func Parse(parts []string) (func([]string, net.Conn), error) {
