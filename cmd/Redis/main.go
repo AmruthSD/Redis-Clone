@@ -25,6 +25,10 @@ func main() {
 
 	if config.RedisConfig.ReplicaOf != "" {
 		replication.Metadata.Role = "slave"
+		err := replication.MakeHandShake()
+		if err != nil {
+			os.Exit(1)
+		}
 	}
 
 	// storage.ReadFile(config.RedisConfig.Dir + "/" + config.RedisConfig.DbFileName)
