@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/AmruthSD/Redis-Clone/internal/config"
+	"github.com/AmruthSD/Redis-Clone/internal/replication"
 	"github.com/AmruthSD/Redis-Clone/internal/storage"
 )
 
@@ -70,4 +71,16 @@ func handle_keys(parts []string, conn net.Conn) {
 		conn.Write([]byte("Argument Count Not Right"))
 	}
 
+}
+
+func handle_info(parts []string, conn net.Conn) {
+	if len(parts) == 2 && parts[1] == "replication" {
+		s := "role:" + replication.Metadata.Role + "\n"
+		s = s + "number of slaves:" + strconv.Itoa(replication.Metadata.NumberOfSlaves) + "\n"
+		s = s + "master_replid:" + replication.Metadata.MasterReplid + "\n"
+		s = s + "master_repl_offset:" + strconv.Itoa(replication.Metadata.MasterReplOffset) + "\n"
+		conn.Write([]byte(s))
+	} else {
+		conn.Write([]byte("Argument Count Not Right"))
+	}
 }

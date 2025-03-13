@@ -12,6 +12,7 @@ var parse_func = map[string]func([]string, net.Conn){
 	"GET":    handle_get,
 	"CONFIG": handle_config,
 	"KEYS":   handle_keys,
+	"INFO":   handle_info,
 }
 
 func Parse(parts []string) (func([]string, net.Conn), error) {

@@ -4,21 +4,29 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 
 	"github.com/AmruthSD/Redis-Clone/internal/config"
 	"github.com/AmruthSD/Redis-Clone/internal/connection"
+	"github.com/AmruthSD/Redis-Clone/internal/replication"
 )
 
 func main() {
-	l, err := net.Listen("tcp", "0.0.0.0:6379")
+
+	config.LoadConfig()
+
+	l, err := net.Listen("tcp", "0.0.0.0:"+strconv.Itoa(config.RedisConfig.Port))
 	if err != nil {
-		fmt.Println("Failed to bind to port 6379")
+		fmt.Println("Failed to bind to port ", config.RedisConfig.Port)
 		os.Exit(1)
 	}
 
 	defer l.Close()
 
-	config.LoadConfig()
+	if config.RedisConfig.ReplicaOf != "" {
+		replication.Metadata.Role = "slave"
+	}
+
 	// storage.ReadFile(config.RedisConfig.Dir + "/" + config.RedisConfig.DbFileName)
 
 	for {
