@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"net"
 	"strings"
+
+	"github.com/AmruthSD/Redis-Clone/internal/replication"
 )
 
 func HandleConnection(con net.Conn) {
+	defer delete(replication.SlavesConnections, con.RemoteAddr().String())
 	defer con.Close()
 
 	buf := make([]byte, 1024)

@@ -89,6 +89,7 @@ func handle_info(parts []string, conn net.Conn) {
 func handle_replconf(parts []string, conn net.Conn) {
 	if len(parts) == 3 && parts[1] == "listening-port" {
 		num, _ := strconv.Atoi(parts[2])
+		replication.SlavesConnections[conn.RemoteAddr().String()] = true
 		if num <= 1<<16 {
 			conn.Write([]byte("OK"))
 		} else {
