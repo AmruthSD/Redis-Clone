@@ -1,11 +1,9 @@
 package connection
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/AmruthSD/Redis-Clone/internal/config"
 	"github.com/AmruthSD/Redis-Clone/internal/replication"
@@ -13,7 +11,15 @@ import (
 )
 
 func handle_ping(parts []string, conn net.Conn) {
-	conn.Write([]byte("PONG\n"))
+	conn.Write([]byte("PONG"))
+}
+
+func handle_ok(parts []string, conn net.Conn) {
+
+}
+
+func handle_unknown(parts []string, conn net.Conn) {
+
 }
 
 func handle_echo(parts []string, conn net.Conn) {
@@ -22,30 +28,6 @@ func handle_echo(parts []string, conn net.Conn) {
 	} else {
 		conn.Write([]byte(strings.Join(parts[1:], " ")))
 	}
-}
-
-func handle_set(parts []string, conn net.Conn) {
-
-	if len(parts) == 3 {
-		storage.SetValue(parts[1], parts[2], -1)
-	} else if len(parts) == 5 && parts[3] == "PX" {
-		ext, _ := strconv.ParseInt(parts[4], 10, 64)
-		ti := time.Now().UnixMilli() + ext
-		storage.SetValue(parts[1], parts[2], ti)
-	} else if len(parts) != 3 {
-		conn.Write([]byte("Argument Count Not Right"))
-		return
-	}
-	conn.Write([]byte("Done"))
-}
-
-func handle_get(parts []string, conn net.Conn) {
-	if len(parts) != 2 {
-		conn.Write([]byte("Argument Count Not Right"))
-		return
-	}
-	val := storage.GetValue(parts[1])
-	conn.Write([]byte(val))
 }
 
 func handle_config(parts []string, conn net.Conn) {
@@ -83,43 +65,5 @@ func handle_info(parts []string, conn net.Conn) {
 		conn.Write([]byte(s))
 	} else {
 		conn.Write([]byte("Argument Count Not Right"))
-	}
-}
-
-func handle_replconf(parts []string, conn net.Conn) {
-	if len(parts) == 3 && parts[1] == "listening-port" {
-		num, _ := strconv.Atoi(parts[2])
-		replication.SlavesConnections[conn.RemoteAddr().String()] = true
-		ConnectionChannels[conn.RemoteAddr().String()] = make(chan int)
-		if num <= 1<<16 {
-			conn.Write([]byte("OK"))
-		} else {
-			conn.Write([]byte("Error"))
-		}
-	} else if len(parts) == 3 && parts[1] == "capa" && parts[2] == "psync2" {
-		conn.Write([]byte("OK"))
-	} else {
-		conn.Write([]byte("Error"))
-	}
-}
-
-func handle_psync(parts []string, conn net.Conn) {
-	if len(parts) == 3 && parts[1] == "?" && parts[2] == "-1" {
-		conn.Write([]byte(fmt.Sprintf("FULLRESYNC %s 0", replication.Metadata.MasterReplid)))
-		/*
-			file, err := os.Open(config.RedisConfig.Dir + "/" + config.RedisConfig.DbFileName)
-			if err != nil {
-				fmt.Println("Error opening file:", err)
-				return
-			}
-			defer file.Close()
-			_, err = io.Copy(conn, file)
-			if err != nil {
-				fmt.Println("Error sending file:", err)
-			}
-			fmt.Println("File sent successfully!")
-		*/
-	} else {
-		conn.Write([]byte("Error"))
 	}
 }

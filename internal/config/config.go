@@ -1,6 +1,9 @@
 package config
 
-import "flag"
+import (
+	"flag"
+	"fmt"
+)
 
 type Config struct {
 	Dir        string
@@ -16,6 +19,8 @@ func LoadConfig() {
 	flag.StringVar(&RedisConfig.DbFileName, "dbfilename", "dump.rdb", "RDB file name")
 	flag.IntVar(&RedisConfig.Port, "port", 6379, "Port to which you want the application to listen to")
 	flag.StringVar(&RedisConfig.ReplicaOf, "replicaof", "", "Port of the master")
+
+	fmt.Println("Flags read")
 
 	flag.Parse()
 }

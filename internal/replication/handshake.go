@@ -1,6 +1,7 @@
 package replication
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -21,47 +22,60 @@ func new_replication_id() string {
 	return s
 }
 
-func MakeHandShake() error {
+func MakeHandShake() (net.Conn, error) {
 	conn, err := net.Dial("tcp", "0.0.0.0:"+config.RedisConfig.ReplicaOf)
 	if err != nil {
 		fmt.Println("Error Connecting to the Master:", err)
-		return err
+		return nil, err
 	}
 
 	conn.Write([]byte("PING"))
 	buf := make([]byte, 1024)
-	_, err = conn.Read(buf)
-	if err != nil || string(buf) != "PONG" {
+	bytesRead, err := conn.Read(buf)
+	message := string(buf[:bytesRead])
+	if err != nil {
 		fmt.Println("Error reading response:", err)
-		return err
+		return nil, err
+	} else if message != "PONG" {
+		fmt.Println("Incorrect Response:", message)
+		return nil, errors.New("incorrect response")
 	}
-	fmt.Println("Received from Master:", string(buf))
+	fmt.Println("Received from Master:", message)
 
 	conn.Write([]byte(fmt.Sprintf("REPLCONF listening-port %d", config.RedisConfig.Port)))
-	_, err = conn.Read(buf)
-	if err != nil || string(buf) != "OK" {
+	bytesRead, err = conn.Read(buf)
+	message = string(buf[:bytesRead])
+	if err != nil {
 		fmt.Println("Error reading response:", err)
-		return err
+		return nil, err
+	} else if message != "OK" {
+		fmt.Println("Incorrect Response:", message)
+		return nil, errors.New("incorrect response")
 	}
-	fmt.Println("Received from Master:", string(buf))
+	fmt.Println("Received from Master:", message)
 
 	conn.Write([]byte("REPLCONF capa psync2"))
-	_, err = conn.Read(buf)
-	if err != nil || string(buf) != "OK" {
+	bytesRead, err = conn.Read(buf)
+	message = string(buf[:bytesRead])
+	if err != nil {
 		fmt.Println("Error reading response:", err)
-		return err
+		return nil, err
+	} else if message != "OK" {
+		fmt.Println("Incorrect Response:", message)
+		return nil, errors.New("incorrect response")
 	}
-	fmt.Println("Received from Master:", string(buf))
+	fmt.Println("Received from Master:", message)
 
 	conn.Write([]byte("PSYNC ? -1"))
-	_, err = conn.Read(buf)
-	if err != nil || string(buf) != "OK" {
+	bytesRead, err = conn.Read(buf)
+	message = string(buf[:bytesRead])
+	if err != nil {
 		fmt.Println("Error reading response:", err)
-		return err
+		return nil, err
 	}
-	fmt.Println("Received from Master:", string(buf))
-	parts := strings.Split(string(buf), " ")
-
+	fmt.Println("Received from Master:", message)
+	parts := strings.Split(message, " ")
+	fmt.Println("Handshake Done")
 	Metadata.MasterReplid = parts[1]
 	Metadata.MasterReplOffset = 0
 	/*
@@ -72,12 +86,13 @@ func MakeHandShake() error {
 		}
 		defer file.Close()
 
-		_, err = io.Copy(file, conn)
+		bytesRead, err = io.Copy(file, conn)
 		if err != nil {
 			fmt.Println("Error receiving file:", err)
 			return err
 		}
 		fmt.Println("File received successfully!")
 	*/
-	return nil
+
+	return conn, nil
 }
