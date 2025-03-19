@@ -2,26 +2,40 @@ package storage
 
 import (
 	"strings"
-	"sync"
 	"time"
 )
 
 var Local_Storage_Val = make(map[string]string)
 var Local_Storage_Time = make(map[string]int64)
-var Write_Mutex sync.RWMutex
+
+type Task struct {
+	Fn        func() any
+	Result_ch chan any
+}
+
+var Task_Chan = make(chan Task)
+
+func Single_Thread_Worker(tasks <-chan Task) {
+	for task := range tasks {
+		res := task.Fn()
+		if res != nil {
+			task.Result_ch <- res
+		}
+	}
+}
 
 func SetValue(key string, val string, time int64) {
-	Write_Mutex.Lock()
+
 	Local_Storage_Val[key] = val
 	Local_Storage_Time[key] = time
-	Write_Mutex.Unlock()
+
 }
 
 func GetValue(key string) string {
-	Write_Mutex.RLock()
+
 	val, err1 := Local_Storage_Val[key]
 	ti, err := Local_Storage_Time[key]
-	Write_Mutex.RUnlock()
+
 	if !err || !err1 {
 		val = "-1"
 	} else if ti != -1 && time.Now().UnixMilli() > ti {

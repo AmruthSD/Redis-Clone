@@ -9,6 +9,7 @@ import (
 	"github.com/AmruthSD/Redis-Clone/internal/config"
 	"github.com/AmruthSD/Redis-Clone/internal/connection"
 	"github.com/AmruthSD/Redis-Clone/internal/replication"
+	"github.com/AmruthSD/Redis-Clone/internal/storage"
 )
 
 func main() {
@@ -22,6 +23,8 @@ func main() {
 	}
 
 	defer l.Close()
+
+	go storage.Single_Thread_Worker(storage.Task_Chan)
 
 	if config.RedisConfig.ReplicaOf != "" {
 		replication.Metadata.Role = "slave"
