@@ -12,10 +12,12 @@ import (
 func handle_set(parts []string, conn net.Conn) {
 	go replication.SendMessageToSlaves(parts)
 	if len(parts) == 3 {
+		replication.UpdateOffset(parts)
 		storage.SetValue(parts[1], parts[2], -1)
 	} else if len(parts) == 5 && parts[3] == "PX" {
 		ext, _ := strconv.ParseInt(parts[4], 10, 64)
 		ti := time.Now().UnixMilli() + ext
+		replication.UpdateOffset(parts)
 		storage.SetValue(parts[1], parts[2], ti)
 	} else if len(parts) != 3 {
 		conn.Write([]byte("Argument Count Not Right"))
