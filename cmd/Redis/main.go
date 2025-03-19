@@ -25,6 +25,10 @@ func main() {
 	defer l.Close()
 
 	go storage.Single_Thread_Worker(storage.Task_Chan)
+	fmt.Println("Started Worker")
+
+	go storage.Cleaner()
+	fmt.Println("Started Cleaner")
 
 	if config.RedisConfig.ReplicaOf != "" {
 		replication.Metadata.Role = "slave"
