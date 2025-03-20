@@ -39,9 +39,11 @@ func Connect_Monitor() (net.Conn, error) {
 		return nil, err
 	} else if message == "YOU ARE THE MASTER" {
 		replication.Metadata.Role = "master"
+		Master_Init()
 	} else {
 		replication.Metadata.Role = "slave"
 		replication.Metadata.MasterAddress = message
+		Slave_Init()
 	}
 	fmt.Println("Received from Master:", message)
 
@@ -49,5 +51,21 @@ func Connect_Monitor() (net.Conn, error) {
 }
 
 func HandleMonitorConnection(conn net.Conn) {
+	buf := make([]byte, 1024)
+	for {
+		bytesRead, err := conn.Read(buf)
+		message := string(buf[:bytesRead])
+		if err != nil {
+			fmt.Println("Error reading response:", err)
 
+		} else if message == "YOU ARE THE MASTER" {
+			replication.Metadata.Role = "master"
+			Master_Init()
+		} else {
+			replication.Metadata.Role = "slave"
+			replication.Metadata.MasterAddress = message
+			Slave_Init()
+		}
+		fmt.Println("Received from Master:", message)
+	}
 }
