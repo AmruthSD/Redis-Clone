@@ -25,6 +25,7 @@ func main() {
 		if MasterKey == "" {
 			MasterKey = con.RemoteAddr().String()
 			go Connect(con)
+			go CheckMasterAlive()
 		} else {
 			go Connect(con)
 		}

@@ -34,7 +34,8 @@ func Connect(conn net.Conn) {
 	ConnectionChan[conn.RemoteAddr().String()] = make(chan string)
 	defer conn.Close()
 	defer delete(ConnctionMap, conn.RemoteAddr().String())
-
+	defer delete(ConnectionChan, conn.RemoteAddr().String())
+	defer close(ConnectionChan[conn.RemoteAddr().String()])
 	buf := make([]byte, 1024)
 	for {
 		select {
