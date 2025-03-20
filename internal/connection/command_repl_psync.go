@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/AmruthSD/Redis-Clone/internal/replication"
+	"github.com/AmruthSD/Redis-Clone/internal/storage"
 )
 
 func handle_replconf(parts []string, conn net.Conn) {
@@ -41,6 +43,22 @@ func handle_psync(parts []string, conn net.Conn) {
 			}
 			fmt.Println("File sent successfully!")
 		*/
+	} else if parts[1] == replication.Metadata.MasterReplid {
+		slave_off, err := strconv.Atoi(parts[2])
+		if err != nil {
+			conn.Write([]byte("Error"))
+			return
+		}
+		by := replication.Metadata.MasterReplOffset - slave_off
+		buf, err := storage.LastFewCommands(by)
+		if err != nil {
+			conn.Write([]byte("Error"))
+			return
+		}
+		conn.Write([]byte("OK"))
+		for _, val := range buf {
+			replication.ConnectionChannels[conn.RemoteAddr().String()] <- strings.Join(val, " ")
+		}
 	} else {
 		conn.Write([]byte("Error"))
 	}
