@@ -10,15 +10,16 @@ import (
 )
 
 func handle_set(parts []string, conn net.Conn) {
-	go replication.SendMessageToSlaves(parts)
+
 	if len(parts) == 3 {
 		replication.UpdateOffset(parts)
-
+		go replication.SendMessageToSlaves(parts)
 		storage.Task_Chan <- storage.Task{Fn: func() any { storage.SetValue(parts[1], parts[2], -1); return nil }, Result_ch: nil}
 	} else if len(parts) == 5 && parts[3] == "PX" {
 		ext, _ := strconv.ParseInt(parts[4], 10, 64)
 		ti := time.Now().UnixMilli() + ext
 		replication.UpdateOffset(parts)
+		go replication.SendMessageToSlaves(parts)
 		storage.Task_Chan <- storage.Task{Fn: func() any { storage.SetValue(parts[1], parts[2], ti); return nil }, Result_ch: nil}
 	} else if len(parts) != 3 {
 		conn.Write([]byte("Argument Count Not Right"))

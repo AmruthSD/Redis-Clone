@@ -1,12 +1,15 @@
 package storage
 
 import (
+	"container/list"
 	"strings"
 	"time"
 )
 
 var Local_Storage_Val = make(map[string]string)
 var Local_Storage_Time = make(map[string]int64)
+
+var Prev_Commands = list.New()
 
 type Task struct {
 	Fn        func() any

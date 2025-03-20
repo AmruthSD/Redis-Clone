@@ -6,4 +6,7 @@ func UpdateOffset(parts []string) {
 		tt += len(v)
 	}
 	Metadata.MasterReplOffset += tt
+	if Metadata.Role == "master" {
+
+	}
 }
