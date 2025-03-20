@@ -16,7 +16,16 @@ func handle_read(buf []byte, con net.Conn) error {
 	}
 	message := string(buf[:bytesRead])
 	fmt.Println("Message received:", message)
-
+	switch message {
+	case "PING":
+		con.Write([]byte("PONG"))
+	case "SEND MASTER CONTACT":
+		if MasterKey == con.RemoteAddr().String() {
+			con.Write([]byte("YOU ARE THE MASTER"))
+		} else {
+			con.Write([]byte(MasterKey))
+		}
+	}
 	return nil
 }
 

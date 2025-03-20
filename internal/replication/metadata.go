@@ -10,7 +10,7 @@ type MasterSlaveData struct {
 
 func NewMasterSlaveData() MasterSlaveData {
 	return MasterSlaveData{
-		Role:             "master",
+		Role:             "",
 		NumberOfSlaves:   0,
 		MasterReplid:     new_replication_id(),
 		MasterAddress:    "",

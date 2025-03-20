@@ -23,7 +23,7 @@ func new_replication_id() string {
 }
 
 func MakeHandShake() (net.Conn, error) {
-	conn, err := net.Dial("tcp", "0.0.0.0:"+config.RedisConfig.ReplicaOf)
+	conn, err := net.Dial("tcp", Metadata.MasterAddress)
 	if err != nil {
 		fmt.Println("Error Connecting to the Master:", err)
 		return nil, err

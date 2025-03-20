@@ -30,13 +30,18 @@ func main() {
 	go storage.Cleaner()
 	fmt.Println("Started Cleaner")
 
-	if config.RedisConfig.ReplicaOf != "" {
-		replication.Metadata.Role = "slave"
+	monitor_conn, err := connection.Connect_Monitor()
+	if err != nil {
+		fmt.Println("Monitor Connection Error")
+		os.Exit(1)
+	}
+	go connection.HandleMonitorConnection(monitor_conn)
+
+	if replication.Metadata.Role == "slave" {
 		master_conn, err := replication.MakeHandShake()
 		if err != nil {
 			os.Exit(1)
 		}
-		replication.Metadata.MasterAddress = master_conn.RemoteAddr().String()
 		go connection.HandleMasterConnection(master_conn)
 	}
 
