@@ -40,7 +40,9 @@ func main() {
 		go connection.HandleMasterConnection(master_conn)
 	}
 
-	// storage.ReadFile(config.RedisConfig.Dir + "/" + config.RedisConfig.DbFileName)
+	if replication.Metadata.Role == "master" {
+		go storage.Dumper()
+	}
 
 	for {
 		con, err := l.Accept()

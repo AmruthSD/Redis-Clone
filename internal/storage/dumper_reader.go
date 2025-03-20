@@ -7,12 +7,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/AmruthSD/Redis-Clone/internal/config"
 )
 
 func Dumper() {
 	for {
 		time.Sleep(900 * time.Second)
-		file, err := os.OpenFile("output.txt", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		file, err := os.OpenFile("../"+config.RedisConfig.Dir+"/"+config.RedisConfig.DbFileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -26,7 +28,7 @@ func Dumper() {
 }
 
 func Reader() {
-	file, err := os.Open("output.txt")
+	file, err := os.Open("../" + config.RedisConfig.Dir + "/" + config.RedisConfig.DbFileName)
 	if err != nil {
 		log.Fatal(err)
 	}
