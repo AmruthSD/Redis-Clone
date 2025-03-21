@@ -2,10 +2,13 @@ package connection
 
 import (
 	"fmt"
+	"io"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 
+	"github.com/AmruthSD/Redis-Clone/internal/config"
 	"github.com/AmruthSD/Redis-Clone/internal/replication"
 	"github.com/AmruthSD/Redis-Clone/internal/storage"
 )
@@ -29,20 +32,20 @@ func handle_replconf(parts []string, conn net.Conn) {
 
 func handle_psync(parts []string, conn net.Conn) {
 	if len(parts) == 3 && parts[1] == "?" && parts[2] == "-1" {
-		conn.Write([]byte(fmt.Sprintf("FULLRESYNC %s 0", replication.Metadata.MasterReplid)))
-		/*
-			file, err := os.Open(config.RedisConfig.Dir + "/" + config.RedisConfig.DbFileName)
-			if err != nil {
-				fmt.Println("Error opening file:", err)
-				return
-			}
-			defer file.Close()
-			_, err = io.Copy(conn, file)
-			if err != nil {
-				fmt.Println("Error sending file:", err)
-			}
-			fmt.Println("File sent successfully!")
-		*/
+		conn.Write([]byte(fmt.Sprintf("FULLRESYNC %s %d", replication.Metadata.MasterReplid, replication.Metadata.SavedRelpOffset)))
+
+		file, err := os.Open(config.RedisConfig.Dir + "/" + config.RedisConfig.DbFileName)
+		if err != nil {
+			fmt.Println("Error opening file:", err)
+			return
+		}
+		defer file.Close()
+		_, err = io.Copy(conn, file)
+		if err != nil {
+			fmt.Println("Error sending file:", err)
+		}
+		fmt.Println("File sent successfully!")
+
 	} else if parts[1] == replication.Metadata.MasterReplid {
 		slave_off, err := strconv.Atoi(parts[2])
 		if err != nil {

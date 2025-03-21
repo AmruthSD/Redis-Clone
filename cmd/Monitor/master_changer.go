@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-const Timeout = 1
+const Timeout = 10
 
 func CheckMasterAlive() {
 	for {

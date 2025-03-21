@@ -3,12 +3,16 @@ package replication
 import (
 	"errors"
 	"fmt"
+	"io"
 	"math/rand"
 	"net"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/AmruthSD/Redis-Clone/internal/config"
+	"github.com/AmruthSD/Redis-Clone/internal/storage"
 )
 
 const alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -20,6 +24,17 @@ func new_replication_id() string {
 		s = s + string(alphanumeric[rand.Int()%len(alphanumeric)])
 	}
 	return s
+}
+
+func UpdateOffset(parts []string) {
+	tt := 0
+	for _, v := range parts {
+		tt += len(v)
+	}
+	Metadata.MasterReplOffset += tt
+	if Metadata.Role == "master" {
+		storage.InsertCommand(parts, tt)
+	}
 }
 
 func MakeHandShake() (net.Conn, error) {
@@ -77,22 +92,29 @@ func MakeHandShake() (net.Conn, error) {
 	parts := strings.Split(message, " ")
 	fmt.Println("Handshake Done")
 	Metadata.MasterReplid = parts[1]
-	Metadata.MasterReplOffset = 0
-	/*
-		file, err := os.Create("received.txt")
-		if err != nil {
-			fmt.Println("Error creating file:", err)
-			return err
-		}
-		defer file.Close()
+	off, err := strconv.Atoi(parts[2])
+	if err == nil {
+		Metadata.MasterReplOffset = off
+	} else {
+		Metadata.MasterReplOffset = 0
+	}
 
-		bytesRead, err = io.Copy(file, conn)
-		if err != nil {
-			fmt.Println("Error receiving file:", err)
-			return err
-		}
-		fmt.Println("File received successfully!")
-	*/
+	file, err := os.OpenFile("../"+config.RedisConfig.DbFileName+"/"+config.RedisConfig.DbFileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		fmt.Println("Error creating file:", err)
+		return nil, err
+	}
 
+	_, err = io.Copy(file, conn)
+	if err != nil {
+		fmt.Println("Error receiving file:", err)
+		return nil, err
+	}
+	fmt.Println("File received successfully!")
+
+	file.Close()
+	storage.Reader()
+
+	conn.Write([]byte(fmt.Sprintf("PSYNC %s %d", Metadata.MasterReplid, Metadata.MasterReplOffset)))
 	return conn, nil
 }

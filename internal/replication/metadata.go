@@ -6,6 +6,7 @@ type MasterSlaveData struct {
 	MasterReplid     string
 	MasterReplOffset int
 	MasterAddress    string
+	SavedRelpOffset  int
 }
 
 func NewMasterSlaveData() MasterSlaveData {
@@ -15,6 +16,7 @@ func NewMasterSlaveData() MasterSlaveData {
 		MasterReplid:     new_replication_id(),
 		MasterAddress:    "",
 		MasterReplOffset: 0,
+		SavedRelpOffset:  0,
 	}
 }
 
