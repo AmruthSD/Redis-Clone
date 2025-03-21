@@ -9,6 +9,8 @@ import (
 	"github.com/AmruthSD/Redis-Clone/internal/replication"
 )
 
+var MyReceivingAddress string
+
 func handle_accepet_request(buf []byte, con net.Conn) error {
 	bytesRead, err := con.Read(buf)
 	if err != nil {

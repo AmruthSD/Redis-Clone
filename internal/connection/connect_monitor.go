@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/AmruthSD/Redis-Clone/internal/replication"
 )
@@ -29,7 +30,19 @@ func Connect_Monitor() (net.Conn, error) {
 		fmt.Println("Incorrect Response:", message)
 		return nil, errors.New("incorrect response")
 	}
-	fmt.Println("Received from Master:", message)
+	fmt.Println("Received from Monitor:", message)
+
+	conn.Write([]byte(MyReceivingAddress))
+	bytesRead, err = conn.Read(buf)
+	message = string(buf[:bytesRead])
+	if err != nil {
+		fmt.Println("Error reading response:", err)
+		return nil, err
+	} else if message != "REGISTERED" {
+		fmt.Println("Incorrect Response:", message)
+		return nil, errors.New("incorrect response")
+	}
+	fmt.Println("Received from Monitor:", message)
 
 	conn.Write([]byte("SEND MASTER CONTACT"))
 	bytesRead, err = conn.Read(buf)
@@ -45,7 +58,7 @@ func Connect_Monitor() (net.Conn, error) {
 		replication.Metadata.MasterAddress = message
 		Slave_Init()
 	}
-	fmt.Println("Received from Master:", message)
+	fmt.Println("Received from Monitor:", message)
 
 	return conn, nil
 }
@@ -55,7 +68,10 @@ func HandleMonitorConnection(conn net.Conn) {
 	for {
 		bytesRead, err := conn.Read(buf)
 		message := string(buf[:bytesRead])
-		if err != nil {
+		if err != nil && err.Error() == "EOF" {
+			fmt.Println("MONITOR CLOSED")
+			os.Exit(3)
+		} else if err != nil {
 			fmt.Println("Error reading response:", err)
 
 		} else if message == "YOU ARE THE MASTER" {
@@ -66,6 +82,6 @@ func HandleMonitorConnection(conn net.Conn) {
 			replication.Metadata.MasterAddress = message
 			Slave_Init()
 		}
-		fmt.Println("Received from Master:", message)
+		fmt.Println("Received from Monitor:", message)
 	}
 }

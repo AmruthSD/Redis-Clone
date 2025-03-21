@@ -3,6 +3,9 @@ OBJFILE := $(notdir $(TEST:.go=))
 build_main:
 	go build -o ./bin/redis ./cmd/Redis
 
+build_monitor:
+	go build -o ./bin/monitor ./cmd/Monitor
+
 build_test:
 	go build -o ./bin/$(OBJFILE) ./tests/$(TEST)
 

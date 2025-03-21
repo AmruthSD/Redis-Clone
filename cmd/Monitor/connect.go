@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var ConnctionMap map[string]bool = make(map[string]bool)
+var ConnctionMap map[string]string = make(map[string]string)
 var ConnectionChan = make(map[string]chan string)
 
 func handle_read(buf []byte, con net.Conn) error {
@@ -23,14 +23,17 @@ func handle_read(buf []byte, con net.Conn) error {
 		if MasterKey == con.RemoteAddr().String() {
 			con.Write([]byte("YOU ARE THE MASTER"))
 		} else {
-			con.Write([]byte(MasterKey))
+			con.Write([]byte(ConnctionMap[MasterKey]))
 		}
+	default:
+		ConnctionMap[con.RemoteAddr().String()] = message
+		con.Write([]byte("REGISTERED"))
 	}
 	return nil
 }
 
 func Connect(conn net.Conn) {
-	ConnctionMap[conn.RemoteAddr().String()] = true
+	ConnctionMap[conn.RemoteAddr().String()] = "-1"
 	ConnectionChan[conn.RemoteAddr().String()] = make(chan string)
 	defer conn.Close()
 	defer delete(ConnctionMap, conn.RemoteAddr().String())

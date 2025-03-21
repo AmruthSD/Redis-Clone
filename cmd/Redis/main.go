@@ -20,6 +20,7 @@ func main() {
 		fmt.Println("Failed to bind to port ", config.RedisConfig.Port)
 		os.Exit(1)
 	}
+	connection.MyReceivingAddress = l.Addr().String()
 
 	defer l.Close()
 
