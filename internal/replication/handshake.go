@@ -1,9 +1,9 @@
 package replication
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"math/rand"
 	"net"
 	"os"
@@ -31,7 +31,7 @@ func UpdateOffset(parts []string) {
 	for _, v := range parts {
 		tt += len(v)
 	}
-	Metadata.MasterReplOffset += tt
+	storage.MasterReplOffset += tt
 	if Metadata.Role == "master" {
 		storage.InsertCommand(parts, tt)
 	}
@@ -44,10 +44,11 @@ func MakeHandShake() (net.Conn, error) {
 		return nil, err
 	}
 
-	conn.Write([]byte("PING"))
-	buf := make([]byte, 1024)
-	bytesRead, err := conn.Read(buf)
-	message := string(buf[:bytesRead])
+	conn.Write([]byte("PING\n"))
+	reader := bufio.NewReader(conn)
+
+	message, err := reader.ReadString('\n')
+	message = strings.TrimSpace(message)
 	if err != nil {
 		fmt.Println("Error reading response:", err)
 		return nil, err
@@ -57,9 +58,9 @@ func MakeHandShake() (net.Conn, error) {
 	}
 	fmt.Println("Received from Master:", message)
 
-	conn.Write([]byte(fmt.Sprintf("REPLCONF listening-port %d", config.RedisConfig.Port)))
-	bytesRead, err = conn.Read(buf)
-	message = string(buf[:bytesRead])
+	conn.Write([]byte(fmt.Sprintf("REPLCONF listening-port %d\n", config.RedisConfig.Port)))
+	message, err = reader.ReadString('\n')
+	message = strings.TrimSpace(message)
 	if err != nil {
 		fmt.Println("Error reading response:", err)
 		return nil, err
@@ -69,9 +70,9 @@ func MakeHandShake() (net.Conn, error) {
 	}
 	fmt.Println("Received from Master:", message)
 
-	conn.Write([]byte("REPLCONF capa psync2"))
-	bytesRead, err = conn.Read(buf)
-	message = string(buf[:bytesRead])
+	conn.Write([]byte("REPLCONF capa psync2\n"))
+	message, err = reader.ReadString('\n')
+	message = strings.TrimSpace(message)
 	if err != nil {
 		fmt.Println("Error reading response:", err)
 		return nil, err
@@ -81,33 +82,43 @@ func MakeHandShake() (net.Conn, error) {
 	}
 	fmt.Println("Received from Master:", message)
 
-	conn.Write([]byte("PSYNC ? -1"))
-	bytesRead, err = conn.Read(buf)
-	message = string(buf[:bytesRead])
+	conn.Write([]byte("PSYNC ? -1\n"))
+	message, err = reader.ReadString('\n')
+	message = strings.TrimSpace(message)
 	if err != nil {
 		fmt.Println("Error reading response:", err)
 		return nil, err
 	}
 	fmt.Println("Received from Master:", message)
 	parts := strings.Split(message, " ")
-	fmt.Println("Handshake Done")
+
 	Metadata.MasterReplid = parts[1]
 	off, err := strconv.Atoi(parts[2])
 	if err == nil {
-		Metadata.MasterReplOffset = off
+		storage.MasterReplOffset = off
 	} else {
-		Metadata.MasterReplOffset = 0
+		storage.MasterReplOffset = 0
 	}
-
-	file, err := os.OpenFile("../"+config.RedisConfig.DbFileName+"/"+config.RedisConfig.DbFileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	fmt.Println("Starting Reading File")
+	file, err := os.OpenFile("./"+config.RedisConfig.Dir+"/"+config.RedisConfig.DbFileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		fmt.Println("Error creating file:", err)
 		return nil, err
 	}
-
-	_, err = io.Copy(file, conn)
-	if err != nil {
-		fmt.Println("Error receiving file:", err)
+	fmt.Println("File opened successfully!")
+	scanner := bufio.NewScanner(conn)
+	for scanner.Scan() {
+		if scanner.Text() == "FILE SENT SUCCESFULLY" {
+			break
+		}
+		_, err = file.WriteString(scanner.Text() + "\n")
+		if err != nil {
+			fmt.Println("Error writing to file:", err)
+			return nil, err
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error reading from connection:", err)
 		return nil, err
 	}
 	fmt.Println("File received successfully!")
@@ -115,6 +126,7 @@ func MakeHandShake() (net.Conn, error) {
 	file.Close()
 	storage.Reader()
 
-	conn.Write([]byte(fmt.Sprintf("PSYNC %s %d", Metadata.MasterReplid, Metadata.MasterReplOffset)))
+	conn.Write([]byte(fmt.Sprintf("PSYNC %s %d\n", Metadata.MasterReplid, storage.MasterReplOffset)))
+	fmt.Println("Handshake Done")
 	return conn, nil
 }

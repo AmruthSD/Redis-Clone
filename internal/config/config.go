@@ -14,8 +14,8 @@ type Config struct {
 var RedisConfig Config
 
 func LoadConfig() {
-	flag.StringVar(&RedisConfig.Dir, "dir", "persist", "Directory to store RDB file")
-	flag.StringVar(&RedisConfig.DbFileName, "dbfilename", "dump.rdb", "RDB file name")
+	flag.StringVar(&RedisConfig.Dir, "dir", "db", "Directory to store RDB file")
+	flag.StringVar(&RedisConfig.DbFileName, "dbfile", "dump.rdb", "RDB file name")
 	flag.IntVar(&RedisConfig.Port, "port", 6379, "Port to which you want the application to listen to")
 
 	fmt.Println("Flags read")

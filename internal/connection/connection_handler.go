@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"bufio"
 	"fmt"
 	"net"
 	"strings"
@@ -11,12 +12,15 @@ import (
 
 var MyReceivingAddress string
 
-func handle_accepet_request(buf []byte, con net.Conn) error {
-	bytesRead, err := con.Read(buf)
+func handle_accepet_request(con net.Conn) error {
+	reader := bufio.NewReader(con)
+
+	message, err := reader.ReadString('\n')
+	message = strings.TrimSpace(message)
 	if err != nil {
 		return err
 	}
-	message := string(buf[:bytesRead])
+
 	fmt.Println("Message received:", message)
 
 	parts := strings.Fields(message)
@@ -37,8 +41,6 @@ func HandleConnection(con net.Conn) {
 	defer delete(replication.SlavesConnections, con.RemoteAddr().String())
 	defer delete(replication.ConnectionChannels, con.RemoteAddr().String())
 
-	buf := make([]byte, 1024)
-
 	for {
 
 		if replication.SlavesConnections[con.RemoteAddr().String()] {
@@ -46,10 +48,10 @@ func HandleConnection(con net.Conn) {
 			select {
 			case msg := <-replication.ConnectionChannels[con.RemoteAddr().String()]:
 				fmt.Println("Sending to Slave:", msg)
-				con.Write([]byte(msg))
+				con.Write([]byte(msg + "\n"))
 			default:
 				con.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
-				err := handle_accepet_request(buf, con)
+				err := handle_accepet_request(con)
 				if err != nil {
 					if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
 						continue
@@ -63,7 +65,7 @@ func HandleConnection(con net.Conn) {
 			}
 
 		} else {
-			err := handle_accepet_request(buf, con)
+			err := handle_accepet_request(con)
 			if err != nil {
 				if err.Error() != "EOF" {
 					fmt.Println("Error reading from connection:", err)
@@ -82,11 +84,9 @@ func HandleMasterConnection(con net.Conn) {
 	defer delete(replication.SlavesConnections, con.RemoteAddr().String())
 	defer delete(replication.ConnectionChannels, con.RemoteAddr().String())
 
-	buf := make([]byte, 1024)
-
 	for {
 
-		err := handle_accepet_request(buf, con)
+		err := handle_accepet_request(con)
 		if err != nil {
 			if err.Error() != "EOF" {
 				fmt.Println("Error reading from connection:", err)

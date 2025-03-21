@@ -18,7 +18,7 @@ func main() {
 	fmt.Println("Connected to", serverAddr)
 
 	msg := strings.Join(os.Args[2:], " ")
-	_, err = conn.Write([]byte(msg))
+	_, err = conn.Write([]byte(msg + "\n"))
 	if err != nil {
 		fmt.Println("Error sending message:", err)
 		return

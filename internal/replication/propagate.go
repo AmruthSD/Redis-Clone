@@ -10,7 +10,7 @@ func SendMessageToSlaves(parts []string) {
 				if val {
 					ch, ex := ConnectionChannels[key]
 					if ex {
-						ch <- msg
+						ch <- msg + "\n"
 					}
 				}
 			}()

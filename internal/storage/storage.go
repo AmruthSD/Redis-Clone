@@ -11,6 +11,9 @@ var Local_Storage_Time = make(map[string]int64)
 
 var Prev_Commands = list.New()
 
+var SlaveOffsetVal = 0
+var MasterReplOffset = 0
+
 type Task struct {
 	Fn        func() any
 	Result_ch chan any
