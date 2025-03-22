@@ -50,6 +50,13 @@ func GetValue(key string) string {
 	return val
 }
 
+func DelValue(key string) {
+
+	delete(Local_Storage_Time, key)
+	delete(Local_Storage_Val, key)
+
+}
+
 func HasPrefix(key string) string {
 	k := ""
 	for _, c := range key {

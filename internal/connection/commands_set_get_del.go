@@ -41,6 +41,17 @@ func handle_get(parts []string, conn net.Conn) {
 	conn.Write(x)
 }
 
+func handle_del(parts []string, conn net.Conn) {
+	if len(parts) != 2 {
+		conn.Write([]byte("Argument Count Not Right\n"))
+		return
+	}
+	replication.UpdateOffset(parts)
+	go replication.SendMessageToSlaves(parts)
+	storage.DelValue(parts[1])
+	conn.Write([]byte("OK\n"))
+}
+
 func to_bytes(value any) []byte {
 	switch v := value.(type) {
 	case []byte:

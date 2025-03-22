@@ -16,6 +16,7 @@ var parse_func = map[string]func([]string, net.Conn){
 	"REPLCONF": handle_replconf,
 	"PSYNC":    handle_psync,
 	"OK":       handle_ok,
+	"DEL":      handle_del,
 	"unknown":  handle_unknown,
 }
 
