@@ -30,12 +30,12 @@ func main() {
 	go storage.Cleaner()
 	fmt.Println("Started Cleaner")
 
-	monitor_conn, err := connection.Connect_Monitor()
+	connection.Monitor_Conn, err = connection.Connect_Monitor()
 	if err != nil {
 		fmt.Println("Monitor Connection Error")
 		os.Exit(1)
 	}
-	go connection.HandleMonitorConnection(monitor_conn)
+	go connection.HandleMonitorConnection(connection.Monitor_Conn)
 
 	for {
 		con, err := l.Accept()

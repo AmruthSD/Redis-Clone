@@ -40,7 +40,7 @@ func HandleConnection(con net.Conn) {
 	defer con.Close()
 	defer delete(replication.SlavesConnections, con.RemoteAddr().String())
 	defer delete(replication.ConnectionChannels, con.RemoteAddr().String())
-
+	defer Monitor_Conn.Write([]byte("CLOSED A CONNECTION"))
 	for {
 
 		if replication.SlavesConnections[con.RemoteAddr().String()] {

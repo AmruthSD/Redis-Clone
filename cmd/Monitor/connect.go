@@ -8,6 +8,7 @@ import (
 
 var ConnctionMap map[string]string = make(map[string]string)
 var ConnectionChan = make(map[string]chan string)
+var ConnectionCount = make(map[string]int)
 
 func handle_read(buf []byte, con net.Conn) error {
 	bytesRead, err := con.Read(buf)
@@ -25,6 +26,10 @@ func handle_read(buf []byte, con net.Conn) error {
 		} else {
 			con.Write([]byte(ConnctionMap[MasterKey]))
 		}
+	case "SEND SLAVE CONTACT":
+		go SendSlave(con)
+	case "CLOSED A CONNECTION":
+		ConnectionCount[con.RemoteAddr().String()]--
 	default:
 		ConnctionMap[con.RemoteAddr().String()] = message
 		con.Write([]byte("REGISTERED"))
@@ -35,10 +40,12 @@ func handle_read(buf []byte, con net.Conn) error {
 func Connect(conn net.Conn) {
 	ConnctionMap[conn.RemoteAddr().String()] = "-1"
 	ConnectionChan[conn.RemoteAddr().String()] = make(chan string)
+	ConnectionCount[conn.RemoteAddr().String()] = 0
 	defer conn.Close()
 	defer delete(ConnctionMap, conn.RemoteAddr().String())
 	defer delete(ConnectionChan, conn.RemoteAddr().String())
 	defer close(ConnectionChan[conn.RemoteAddr().String()])
+	defer delete(ConnectionCount, conn.RemoteAddr().String())
 	buf := make([]byte, 1024)
 	for {
 		select {

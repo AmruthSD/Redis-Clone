@@ -8,9 +8,11 @@ import (
 
 var MasterKey string = ""
 
+const PORT = "7000"
+
 func main() {
 	fmt.Println("Starting Monitor")
-	l, err := net.Listen("tcp", "0.0.0.0:"+"7000")
+	l, err := net.Listen("tcp", "0.0.0.0:"+PORT)
 	if err != nil {
 		os.Exit(1)
 	}

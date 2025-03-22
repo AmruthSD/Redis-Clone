@@ -11,6 +11,8 @@ import (
 
 const MonitorPort = "7000"
 
+var Monitor_Conn net.Conn
+
 func Connect_Monitor() (net.Conn, error) {
 	conn, err := net.Dial("tcp", "0.0.0.0:"+MonitorPort)
 	if err != nil {
